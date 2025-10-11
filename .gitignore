@@ -1,0 +1,27 @@
+# Ignore build folders
+Builds/
+cmake-build-*/
+*.sln
+*.vcxproj*
+*.xcodeproj
+*.obj
+*.pdb
+*.exe
+*.dll
+*.app
+*.ipa
+*.log
+
+# Ignore user-specific settings
+*.user
+*.DS_Store
+
+# Ignore JUCE’s auto-generated folders
+/JUCE/modules
+/JUCE/extras
+/JUCE/examples
+
+# Optional: ignore your cache or backup files
+*.autosave
+*.zip
+*.bak
