@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "LFO.h"
 
 //==============================================================================
 /**
@@ -57,6 +58,15 @@ public:
     // 👇  volume 
     float globalVolume = 100.0f;
 
+    //bpm and LFO 
+    float bpm = 122.0f; //hardcoded 
+    //getPlayHead()->getPosition()->getBpm(); //hardcoded values 
+    int division = 16; //default 1/16th 
+    float mix = 1.0f; // 1.0 full effect 0 is dry 
+    //double sampleRate = sampleRate;
+
+    LFO lfo;
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LFO2AudioProcessor)
@@ -67,5 +77,6 @@ private:
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     bool usingTestAudio = false;
+
 
 };

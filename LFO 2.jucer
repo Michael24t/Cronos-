@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="CFnyPg" name="LFO 2" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginProducesMidiOut,pluginWantsMidiIn"
-              pluginFormats="buildAU,buildStandalone,buildVST,buildVST3">
+              pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" displaySplashScreen="1">
   <MAINGROUP id="xgcdZ0" name="LFO 2">
     <GROUP id="{77144C6C-5C5F-6166-D82C-5AC1F77E5A98}" name="Source">
       <FILE id="WCcaxV" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -13,6 +13,7 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="vU290K" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="EE7NyH" name="LFO.h" compile="0" resource="0" file="Source/LFO.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
