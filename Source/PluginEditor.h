@@ -10,10 +10,14 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "WaveFormEditor.h"
 
 //==============================================================================
 /**
 */
+
+extern WaveformEditor waveEditor; //idk if this works 
+
 class GlowTitle : public juce::Component,
     private juce::Timer
 {

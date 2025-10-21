@@ -61,7 +61,7 @@ public:
     //bpm and LFO 
     float bpm = 122.0f; //hardcoded 
     //getPlayHead()->getPosition()->getBpm(); //hardcoded values 
-    int division = 16; //default 1/16th 
+    float division = 16; //default 1/16th 
     float mix = 1.0f; // 1.0 full effect 0 is dry 
     //double sampleRate = sampleRate;
 

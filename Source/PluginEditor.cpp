@@ -10,6 +10,9 @@
 #include "PluginEditor.h"
 #include "LFO.h"
 
+
+
+WaveformEditor waveEditor;  
 //==============================================================================
 
 
@@ -18,8 +21,9 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (600, 400);
-
+    setSize (900, 600);
+    setResizable(true, true);   //dynamic resize
+    getConstrainer()->setFixedAspectRatio(1.5);
 
     addAndMakeVisible(titleGlow);
 
@@ -35,7 +39,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
     //time division slider 
     timeSlider.setSliderStyle(juce::Slider::Rotary);
-    timeSlider.setRange(1, 3, 1); // three discrete positions
+    timeSlider.setRange(1, 5, 1); // three discrete positions
     timeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 60, 20);
     timeSlider.setValue(1); // start on 1/16th
     timeSlider.addListener(this);   
@@ -74,6 +78,18 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     addAndMakeVisible(customKnob);
 
 
+    addAndMakeVisible(waveEditor);
+    // When editor updates waveform, push it into audio LFO (audioProcessor.lfo)
+    waveEditor.setUpdateCallback([this](const std::vector<float>& buf)
+        {
+            // This is GUI thread calling into processor — safe because LFO uses CriticalSection
+            audioProcessor.lfo.setCustomWaveform(buf);
+        });
+
+
+
+
+
 }
 
 
@@ -99,7 +115,7 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     timeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
 
     timeLabel.setColour(juce::Label::textColourId, juce::Colours::darkgrey);
-    timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
     mixKnob.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
     mixKnob.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
@@ -129,6 +145,12 @@ void LFO2AudioProcessorEditor::resized()
     customKnob.setBounds(250, 200, 128, 128);
 
     titleGlow.setBounds(0, 10, getWidth(), 60);
+
+
+    waveEditor.setBounds(getWidth() / 2 + 20, 100, getWidth() / 2 - 40, getHeight() - 140);
+
+
+
 }
 
 //should be whats fitting the slider data to the global volume
@@ -157,7 +179,16 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
             audioProcessor.division = 1;
             timeValueLabel.setText("1/4", juce::dontSendNotification);
             break;
+        case 4:
+            audioProcessor.division = 0.5;
+            timeValueLabel.setText("1/2", juce::dontSendNotification);  //not working 
+            break;
+        case 5:
+            audioProcessor.division = 0.25;
+            timeValueLabel.setText("1/4", juce::dontSendNotification);  //not working 
+            break;
         }
+
 
         audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
     }
