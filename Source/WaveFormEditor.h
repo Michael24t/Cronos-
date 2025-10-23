@@ -13,13 +13,15 @@ public:
         points = { {0.0f, 0.5f}, {0.5f, 1.0f}, {1.0f, 0.5f} };
         segments.resize(std::max<size_t>(1, points.size() - 1));
         setOpaque(true);
-        startTimerHz(30);
+        startTimerHz(30);  
     }
 
     ~WaveformEditor() override { stopTimer(); }
 
     using UpdateCallback = std::function<void(const std::vector<float>&)>;
     void setUpdateCallback(UpdateCallback cb) { updateCallback = std::move(cb); }
+
+
 
     void paint(juce::Graphics& g) override
     {
@@ -175,7 +177,7 @@ public:
         else if (selectedSegment >= 0 && selectedSegment < (int)segments.size())
         {
             float dy = (dragStartY - e.position.y) / (float)getHeight();
-            float newT = juce::jlimit(-1.0f, 1.0f, initialTension + dy * 2.0f);
+            float newT = juce::jlimit(-1.0f, 1.0f, initialTension + dy * 3.5f); //<----change last number to exxagerate curve: TENSION stardew
             if (std::abs(newT - segments[selectedSegment].tension) > 1e-4f)
             {
                 segments[selectedSegment].tension = newT;
@@ -191,6 +193,8 @@ public:
     {
         selected = -1;
         selectedSegment = -1;
+
+        repaint();
     }
 
     // create sampled buffer (N samples) from current control points (uses quadratic per-segment)
@@ -225,24 +229,36 @@ public:
     // Change waveforms to common shapes with dropdwon menu 
     void setPresetWaveform(const std::string& shape)
     {
+        selected = -1;
+        selectedSegment = -1;
+        pendingUpdate = false;
+
+
         points.clear();
 
         const int N = 128; // resolution for curve
         if (shape == "Sine")
         {
-            for (int i = 0; i <= N; ++i)
-            {
-                float x = (float)i / N;
-                float y = 0.5f + 0.5f * std::sin(juce::MathConstants<float>::twoPi * x);
+            for (auto& seg : segments) seg.tension = 0.0f; //should reset tension after preset change
 
-                //if (i == 1 || i == 32 || i == 64 || i == 96 || i == 128) { //sin wave construction. wont work right now 
-                    points.push_back({ x, y });
-                //}
-            }
+            points = {
+        {0.0f, 0.5f},   
+        {0.25f, 1.0f},  
+        {0.5f, 0.5f},   
+        {0.75f, 0.0f},  
+        {1.0f, 0.5f}    
+            };
+
+            // Should add curvature to the sin 
+            segments.resize(points.size() - 1);
+            for (size_t i = 0; i < segments.size(); ++i)
+            {
+                segments[i].tension = (i < 2) ? 0.5f : -0.5f;   // positive curve on first half, negative on second
+            } 
         }
         else if (shape == "Saw")
         {
-            points = { {0.0f, 0.0f}, {1.0f, 1.0f} };
+            points = { {0.0f, 0.0f} ,{0.03f, 1.0f}, {1.0f, 0.0f} };
         }
         else if (shape == "Triangle")
         {
@@ -254,6 +270,11 @@ public:
         }
 
         segments.resize(std::max<size_t>(1, points.size() - 1));
+
+        if (shape != "Sine") {
+            for (auto& seg : segments) seg.tension = 0.0f; //should reset tension after preset change
+        }
+
         repaint();
 
         // Sends immediate update to the LFO
@@ -365,7 +386,9 @@ private:
                 float tension = (i < segments.size()) ? segments[i].tension : 0.0f;
 
                 // controlY near midpoint adjusted by tension
-                float controlY = juce::jlimit(0.0f, 1.0f, 0.5f * (y1 + y2) + tension * 0.25f);
+                //float controlY = juce::jlimit(0.0f, 1.0f, 0.5f * (y1 + y2) + tension * 0.25f);
+                float controlY = juce::jlimit(0.0f, 1.0f, 0.5f * (y1 + y2) + tension * 0.5f);  //<------change first number for change in tension stardew 
+
 
                 float inv = 1.0f - segT;
                 float y = inv * inv * y1 + 2.0f * inv * segT * controlY + segT * segT * y2;

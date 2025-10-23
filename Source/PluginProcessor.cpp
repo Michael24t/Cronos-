@@ -100,8 +100,9 @@ void LFO2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     // === Load hardcoded WAV file (for standalone debug only) ===
 #if JucePlugin_Build_Standalone
-    juce::File testFile("C:/Users/Michael/Desktop/DJ Tumminia/Songs/wasted x midnight city (one shot high bpm).mp3"); // <-- change this path!
+    //juce::File testFile("C:/Users/Michael/Desktop/DJ Tumminia/Songs/wasted x midnight city (one shot high bpm).mp3"); // <-- change this path!
     //juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/unisonSin.mp3"); // <-- change this path!
+    juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/nothingNoise.mp3");
 
     if (testFile.existsAsFile())
     {
