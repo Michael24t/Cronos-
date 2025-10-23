@@ -12,6 +12,7 @@ smooth -
 phase? -
 Pan mode -
 make UI look pretty -
+animated line across curve (see flux mini) -
 ------
 maybe low pass filter, or even low pass modulated on stutter -
 maybe show audio within the waveform grid if possible -
