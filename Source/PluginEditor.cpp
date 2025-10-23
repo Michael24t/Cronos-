@@ -82,11 +82,44 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     // When editor updates waveform, push it into audio LFO (audioProcessor.lfo)
     waveEditor.setUpdateCallback([this](const std::vector<float>& buf)
         {
-            // This is GUI thread calling into processor — safe because LFO uses CriticalSection
+            // This is GUI thread calling into processor â€” safe because LFO uses CriticalSection
             audioProcessor.lfo.setCustomWaveform(buf);
         });
 
 
+    // Text above LFO selector 
+    lfoShapeLabel.setText("LFO Shape", juce::dontSendNotification);
+    lfoShapeLabel.setFont(juce::Font(14.0f, juce::Font::bold));
+    lfoShapeLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(lfoShapeLabel);
+
+    //LFO selector dropdown 
+    lfoShapeSelector.addItem("Saw", 1);
+    lfoShapeSelector.addItem("Sine", 2);
+    lfoShapeSelector.addItem("Triangle", 3);
+    lfoShapeSelector.addItem("Square", 4);
+    //lfoShapeSelector.addItem("Custom", 5);
+    lfoShapeSelector.setSelectedId(1); // default to saw for now 
+    lfoShapeSelector.onChange = [this]()
+    {
+        int selected = lfoShapeSelector.getSelectedId();
+        std::string shapeName;
+        LFO::Shape shape = LFO::Shape::Saw;
+
+        switch (selected)
+        {
+        case 1: shape = LFO::Shape::Saw; shapeName = "Saw"; break;
+        case 2: shape = LFO::Shape::Sine; shapeName = "Sine"; break;
+        case 3: shape = LFO::Shape::Triangle; shapeName = "Triangle"; break;
+        case 4: shape = LFO::Shape::Square; shapeName = "Square"; break;
+        //case 5: shape = LFO::Shape::Custom; break;
+        }
+
+        audioProcessor.lfo.setShape(shape);
+
+        waveEditor.setPresetWaveform(shapeName);
+    };
+    addAndMakeVisible(lfoShapeSelector);
 
 
 
@@ -123,6 +156,12 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     mixKnob.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
 
 
+    //combobox == dropdown
+    lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black);
+    lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+    lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colours::lime);
+
+
 
 }
 
@@ -149,6 +188,10 @@ void LFO2AudioProcessorEditor::resized()
 
     waveEditor.setBounds(getWidth() / 2 + 20, 100, getWidth() / 2 - 40, getHeight() - 140);
 
+    //dropdown
+    auto topArea = getLocalBounds().removeFromTop(80);
+    lfoShapeLabel.setBounds(getWidth() / 2 + 20, 60, getWidth() / 2 - 40, 20);
+    lfoShapeSelector.setBounds(getWidth() / 2 + 20, 80, getWidth() / 2 - 40, 25);
 
 
 }

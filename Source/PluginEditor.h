@@ -132,6 +132,9 @@ private:
 
     GlowTitle titleGlow;
 
+    juce::ComboBox lfoShapeSelector;
+    juce::Label lfoShapeLabel;
+
     void sliderValueChanged(juce::Slider* slider) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LFO2AudioProcessorEditor)

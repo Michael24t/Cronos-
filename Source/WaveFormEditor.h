@@ -219,6 +219,54 @@ public:
         return out;
     }
 
+
+
+
+    // Change waveforms to common shapes with dropdwon menu 
+    void setPresetWaveform(const std::string& shape)
+    {
+        points.clear();
+
+        const int N = 128; // resolution for curve
+        if (shape == "Sine")
+        {
+            for (int i = 0; i <= N; ++i)
+            {
+                float x = (float)i / N;
+                float y = 0.5f + 0.5f * std::sin(juce::MathConstants<float>::twoPi * x);
+
+                //if (i == 1 || i == 32 || i == 64 || i == 96 || i == 128) { //sin wave construction. wont work right now 
+                    points.push_back({ x, y });
+                //}
+            }
+        }
+        else if (shape == "Saw")
+        {
+            points = { {0.0f, 0.0f}, {1.0f, 1.0f} };
+        }
+        else if (shape == "Triangle")
+        {
+            points = { {0.0f, 0.0f}, {0.5f, 1.0f}, {1.0f, 0.0f} };
+        }
+        else if (shape == "Square")
+        {
+            points = { {0.0f, 1.0f}, {0.5f, 1.0f}, {0.5f, 0.0f}, {1.0f, 0.0f} };
+        }
+
+        segments.resize(std::max<size_t>(1, points.size() - 1));
+        repaint();
+
+        // Sends immediate update to the LFO
+        if (updateCallback)
+            updateCallback(createSampleBuffer(1024, true));
+    }
+
+
+
+
+
+
+    //==========================================================================================================
 private:
     struct P { float x, y; };
     std::vector<P> points;
@@ -359,4 +407,8 @@ private:
             updateCallback(buf);
         }
     }
+
+
+
+
 };
