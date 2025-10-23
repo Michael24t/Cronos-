@@ -13,11 +13,13 @@
 
 
 WaveformEditor waveEditor;  
+//GlowEffect volumeGlow;
 //==============================================================================
 
 
 LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+    volumeGlow(&midiVolume, juce::Colours::cyan, 25.0f, true, GlowEffect::Mode::HueCycle, 1.5f)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -37,6 +39,9 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     midiVolume.addListener(this);
     addAndMakeVisible(midiVolume);
 
+    volumeGlow.setTarget(&midiVolume); // adds glow 
+
+
     //time division slider 
     timeSlider.setSliderStyle(juce::Slider::Rotary);
     timeSlider.setRange(1, 5, 1); // three discrete positions
@@ -55,6 +60,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     timeValueLabel.setFont(juce::Font(14.0f));
     timeValueLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(timeValueLabel);
+
     
     //mix knob 
     mixKnob.setSliderStyle(juce::Slider::Rotary);
@@ -67,6 +73,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     mixKnob.setTextValueSuffix(" Mix");
     mixKnob.addListener(this);
     addAndMakeVisible(mixKnob);
+
 
 
     // Load and show the custom knob
@@ -141,6 +148,7 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
 
 
+
     // In your component's constructor or a relevant method
     timeSlider.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
     timeSlider.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
@@ -160,6 +168,7 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black);
     lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colours::white);
     lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colours::lime);
+
 
 
 

@@ -13,6 +13,7 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="vU290K" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="PoEnnM" name="GlowEffect.h" compile="0" resource="0" file="Source/GlowEffect.h"/>
     <FILE id="EE7NyH" name="LFO.h" compile="0" resource="0" file="Source/LFO.h"/>
     <FILE id="M58iEi" name="WaveFormEditor.h" compile="0" resource="0"
           file="Source/WaveFormEditor.h"/>

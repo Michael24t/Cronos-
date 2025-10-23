@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "WaveFormEditor.h"
+#include "GlowEffect.h"
 
 //==============================================================================
 /**
@@ -46,6 +47,7 @@ private:
     juce::DropShadowEffect shadow;
     juce::Colour currentGlowColour = juce::Colours::lime;
     float hueOffset = 0.0f;
+
 
     void timerCallback() override
     {
@@ -136,6 +138,8 @@ private:
     juce::Label lfoShapeLabel;
 
     void sliderValueChanged(juce::Slider* slider) override;
+
+    GlowEffect volumeGlow; //for glow 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LFO2AudioProcessorEditor)
 };

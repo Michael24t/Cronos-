@@ -87,9 +87,9 @@ public:
         // advance phase
         phase += rateHz / sampleRate;
         if (phase >= 1.0) phase -= 1.0;
-        return out;
+        return out; 
     }
-
+     
 private:
     juce::CriticalSection bufferLock;
     std::vector<float> customBuffer;

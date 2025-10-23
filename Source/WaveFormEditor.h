@@ -14,6 +14,8 @@ public:
         segments.resize(std::max<size_t>(1, points.size() - 1));
         setOpaque(true);
         startTimerHz(30);  
+        setWantsKeyboardFocus(true);
+        setMouseClickGrabsKeyboardFocus(false);
     }
 
     ~WaveformEditor() override { stopTimer(); }
@@ -102,7 +104,7 @@ public:
     void mouseDown(const juce::MouseEvent& e) override
     {
         auto pos = fromPixel(e.position);
-        int idx = indexOfPointNear(pos, hitRadius);
+        int idx = indexOfPointNear(e.position, hitRadius * getWidth()); 
 
         if (e.mods.isLeftButtonDown())
         {
@@ -110,7 +112,8 @@ public:
             {
                 // start dragging a control point
                 selected = idx;
-                dragOffset = { pos.x - points[idx].x, pos.y - points[idx].y };
+                auto posPix = toPixel(pos);
+                dragOffset = toPixel(points[idx]) - e.position;; // consistent with JUCE typing
             }
             else
             {
@@ -118,7 +121,7 @@ public:
                 if (e.getNumberOfClicks() == 2)
                 {
                     addPointConstrained(pos);
-                    selected = indexOfPointNear(pos, hitRadius);
+                    selected = indexOfPointNear(toPixel(pos), hitRadius);
                     repaint();
                     // immediate update for instant visual/audio feedback
                     if (updateCallback)
@@ -126,13 +129,23 @@ public:
                 }
                 else
                 {
-                    // try selecting a segment (click near the segment line)
-                    int segIdx = indexOfSegmentNear(pos, 0.03f);
+                    int segIdx = indexOfTensionHandleNear(e.position, 8.0f); // for placing and editing orange curve lines 
                     if (segIdx >= 0)
                     {
                         selectedSegment = segIdx;
                         dragStartY = e.position.y;
                         initialTension = segments[segIdx].tension;
+                    }
+                    else
+                    {
+                        // fallback: click near line
+                        segIdx = indexOfSegmentNear(pos, 0.03f);
+                        if (segIdx >= 0)
+                        {
+                            selectedSegment = segIdx;
+                            dragStartY = e.position.y;
+                            initialTension = segments[segIdx].tension;
+                        }
                     }
                 }
             }
@@ -155,23 +168,21 @@ public:
     void mouseDrag(const juce::MouseEvent& e) override
     {
         // If dragging a point
-        if (selected >= 0 && selected < (int)points.size())
+        if (selected >= 0 && selected < (int)points.size())  //should update now using pixel data
         {
-            auto pos = fromPixel(e.position);
-            float newX = juce::jlimit(0.0f, 1.0f, pos.x - dragOffset.x);
-            float newY = juce::jlimit(0.0f, 1.0f, pos.y - dragOffset.y);
+            auto newPix = e.position + dragOffset;
+            auto newNorm = fromPixelExact(newPix);
 
-            // prevent crossing neighbors: clamp between neighbours' x
             float leftBound = (selected == 0) ? 0.0f : points[selected - 1].x + 0.001f;
             float rightBound = (selected == (int)points.size() - 1) ? 1.0f : points[selected + 1].x - 0.001f;
-            newX = juce::jlimit(leftBound, rightBound, newX);
 
-            points[selected].x = newX;
-            points[selected].y = newY;
+            newNorm.x = juce::jlimit(leftBound, rightBound, newNorm.x);
+            newNorm.y = juce::jlimit(0.0f, 1.0f, newNorm.y);
 
-            // keep segments in sync size-wise (no change)
-            pushUpdateDebounced();
+            points[selected] = newNorm;
+
             repaint();
+            pushUpdateDebounced();
         }
         // Else if dragging a segment's tension handle
         else if (selectedSegment >= 0 && selectedSegment < (int)segments.size())
@@ -296,7 +307,7 @@ private:
     std::vector<Segment> segments;
 
     int selected = -1;
-    P dragOffset{ 0,0 };
+    juce::Point<float> dragOffset{ 0.0f,0.0f }; //point typing 
     const float hitRadius = 0.03f; // normalized coords
 
     // segment selection / dragging
@@ -311,10 +322,10 @@ private:
     juce::Point<float> toPixel(const P& p) const
     {
         auto r = getLocalBounds().toFloat().reduced(10.0f);
-        float px = r.getX() + p.x * r.getWidth();
-        float py = r.getY() + (1.0f - p.y) * r.getHeight();
-        return { px, py };
+        return { r.getX() + p.x * r.getWidth(),
+                 r.getY() + (1.0f - p.y) * r.getHeight() };
     }
+
     P fromPixel(const juce::Point<float>& pt) const
     {
         auto r = getLocalBounds().toFloat().reduced(10.0f);
@@ -322,15 +333,21 @@ private:
         float ny = 1.0f - ((pt.y - r.getY()) / r.getHeight());
         return { nx, ny };
     }
+    P fromPixelExact(const juce::Point<float>& pt) const //not sure if both are needed they are similar ^
+    {
+        auto r = getLocalBounds().toFloat().reduced(10.0f);
+        return { (pt.x - r.getX()) / r.getWidth(),
+                 1.0f - ((pt.y - r.getY()) / r.getHeight()) };
+    }
 
     // hit test for points
-    int indexOfPointNear(const P& p, float tol) const
+    int indexOfPointNear(juce::Point<float> pixelPos, float tol) const
     {
         for (size_t i = 0; i < points.size(); ++i)
         {
-            float dx = points[i].x - p.x;
-            float dy = points[i].y - p.y;
-            if (std::sqrt(dx * dx + dy * dy) < tol) return (int)i;
+            auto pPix = toPixel(points[i]);
+            if (pPix.getDistanceFrom(pixelPos) < tol)
+                return (int)i;
         }
         return -1;
     }
@@ -360,6 +377,24 @@ private:
         }
         return -1;
     }
+
+    int indexOfTensionHandleNear(juce::Point<float> pixelPos, float tol) const  //for attatching edits to orange points 
+    {
+        if (points.size() < 2) return -1;
+        for (size_t i = 0; i + 1 < points.size(); ++i)
+        {
+            auto p1 = toPixel(points[i]);
+            auto p2 = toPixel(points[i + 1]);
+            juce::Point<float> mid = (p1 + p2) * 0.5f;
+            mid.y -= segments[i].tension * 40.0f; 
+
+            if (mid.getDistanceFrom(pixelPos) < tol)
+                return (int)i;
+        }
+        return -1;
+    }
+
+
 
     // add point and keep segments synced
     void addPointConstrained(const P& p)
