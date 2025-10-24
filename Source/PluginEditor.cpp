@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "LFO.h"
+#include "WaveFormEditor.h"
 
 
 
@@ -21,6 +22,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p),
     volumeGlow(&midiVolume, juce::Colours::cyan, 25.0f, true, GlowEffect::Mode::HueCycle, 1.5f)
 {
+    startTimerHz(30);
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (900, 600);
@@ -199,8 +201,8 @@ void LFO2AudioProcessorEditor::resized()
 
     //dropdown
     auto topArea = getLocalBounds().removeFromTop(80);
-    lfoShapeLabel.setBounds(getWidth() / 2 + 20, 60, getWidth() / 2 - 40, 20);
-    lfoShapeSelector.setBounds(getWidth() / 2 + 20, 80, getWidth() / 2 - 40, 25);
+    lfoShapeLabel.setBounds(getWidth() / 2 +30, 60, 100, 20);
+    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 80, 100, 25);
 
 
 }
@@ -220,7 +222,7 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
         switch (selection)
         {
         case 1:
-            audioProcessor.division = 16;
+            audioProcessor.division = 16;  
             timeValueLabel.setText("1/16", juce::dontSendNotification);
             break;
         case 2:
@@ -233,17 +235,29 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
             break;
         case 4:
             audioProcessor.division = 0.5;
-            timeValueLabel.setText("1/2", juce::dontSendNotification);  //not working 
+            timeValueLabel.setText("1/2", juce::dontSendNotification);  
             break;
         case 5:
             audioProcessor.division = 0.25;
-            timeValueLabel.setText("1/4", juce::dontSendNotification);  //not working 
+            timeValueLabel.setText("1/4", juce::dontSendNotification);  
             break;
         }
 
 
         audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
+
+        
+        float newRateHz = audioProcessor.getLFORateHz();
+        waveEditor.setAnimationSpeed(newRateHz);
     }
 
     
 }
+
+void LFO2AudioProcessorEditor::timerCallback()
+{
+    float lfoRateHz = audioProcessor.getLFORateHz();  // expose a getter from your processor
+    waveEditor.setAnimationSpeed(lfoRateHz);
+}
+
+

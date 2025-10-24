@@ -136,3 +136,15 @@ private:
             target->repaint();
     }
 };
+
+class GlowDot : public juce::Component
+{
+public:
+    GlowDot() { setSize(40, 40); }  //change to 8,8 this is for testing 
+    void paint(juce::Graphics& g) override
+    {
+        g.setColour(juce::Colours::red);
+        g.fillEllipse(getLocalBounds().toFloat());
+    }
+};
+

@@ -3,22 +3,44 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include "GlowEffect.h"
+
+
 
 class WaveformEditor : public juce::Component,
-    private juce::Timer
+                       private juce::Timer
 {
 public:
     WaveformEditor()
     {
         points = { {0.0f, 0.5f}, {0.5f, 1.0f}, {1.0f, 0.5f} };
         segments.resize(std::max<size_t>(1, points.size() - 1));
-        setOpaque(true);
+        setOpaque(false); // change this to true if something getts hidden behind the line 
         startTimerHz(30);  
         setWantsKeyboardFocus(true);
         setMouseClickGrabsKeyboardFocus(false);
+
+
+        //glow dot 
+        // Setup the glowing dot
+        addAndMakeVisible(dot);
+        dot.setSize(10, 10);
+        dot.setInterceptsMouseClicks(false, false);
+
+        // attach glow effect to dot
+        dotGlow = std::make_unique<GlowEffect>(
+            &dot,
+            juce::Colours::cyan,
+            25.0f,
+            true,
+            GlowEffect::Mode::PulseIntensity,
+            0.8f
+            );
     }
 
     ~WaveformEditor() override { stopTimer(); }
+
+    
 
     using UpdateCallback = std::function<void(const std::vector<float>&)>;
     void setUpdateCallback(UpdateCallback cb) { updateCallback = std::move(cb); }
@@ -95,6 +117,20 @@ public:
             g.setColour(juce::Colours::yellow);
             g.drawEllipse(mid.x - 6.0f, mid.y - 6.0f, 12.0f, 12.0f, 2.0f);
         }
+
+
+        
+
+
+         //  Update glow dot position 
+        float t = animationPhase; // normalized [0..1]
+        float y = sampleFromPoints(t);
+        juce::Point<float> pos = toPixel({ t, y });
+
+        dot.setCentrePosition((int)pos.x, (int)pos.y);
+        dot.repaint(); //force redraw 
+
+
     }
 
     void resized() override {}
@@ -294,8 +330,9 @@ public:
     }
 
 
-
-
+    void setAnimationSpeed(float hz) {
+        animationSpeed = hz;
+    }
 
 
     //==========================================================================================================
@@ -317,6 +354,14 @@ private:
 
     UpdateCallback updateCallback;
     bool pendingUpdate = false;
+
+
+    //for dot animation along line
+    float animationPhase = 0.0f;
+    float animationSpeed = 1.0f;
+
+    GlowDot dot;
+    std::unique_ptr<GlowEffect> dotGlow;
 
     // normalized -> pixel and back
     juce::Point<float> toPixel(const P& p) const
@@ -464,9 +509,16 @@ private:
             auto buf = createSampleBuffer(1024, true);
             updateCallback(buf);
         }
+
+
+        const float dt = 1.0f / 30.0f;  // timer is at 30 Hz
+        animationPhase = std::fmod(animationPhase + animationSpeed * dt, 1.0f);
+
+        repaint();
+        dot.repaint();
+
+
     }
-
-
 
 
 };

@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "LFO.h"
+#include "WaveFormEditor.h"
 
 //==============================================================================
 /**
@@ -67,16 +68,19 @@ public:
 
     LFO lfo;
 
+    float getLFORateHz() const { return (lfo.getRateHz()*2); }
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LFO2AudioProcessor)
 
     float volume = 1.0f; // example for your volume slider test
+    //float lfoRateHz = 1.0f; //current LFO rate in Hz
+
 
     juce::AudioFormatManager formatManager; //wav file testing
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     bool usingTestAudio = false;
-
 
 };

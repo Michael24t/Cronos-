@@ -89,6 +89,8 @@ public:
         if (phase >= 1.0) phase -= 1.0;
         return out; 
     }
+
+    float getRateHz() const { return rateHz; }
      
 private:
     juce::CriticalSection bufferLock;

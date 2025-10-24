@@ -107,7 +107,8 @@ private:
 
 
 class LFO2AudioProcessorEditor  : public juce::AudioProcessorEditor,
-    private juce::Slider::Listener
+    private juce::Slider::Listener,
+    private juce::Timer
 {
 public:
     LFO2AudioProcessorEditor (LFO2AudioProcessor&);
@@ -116,6 +117,8 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+
+
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -138,6 +141,10 @@ private:
     juce::Label lfoShapeLabel;
 
     void sliderValueChanged(juce::Slider* slider) override;
+
+    void timerCallback() override;
+
+    
 
     GlowEffect volumeGlow; //for glow 
 
