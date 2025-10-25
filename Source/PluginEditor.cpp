@@ -52,6 +52,83 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     timeSlider.addListener(this);   
     addAndMakeVisible(timeSlider);
 
+
+
+    //switch between rate modes 
+    // -----------------------------------------------------
+    bpmButton.setClickingTogglesState(true);
+    hzButton.setClickingTogglesState(true);
+    bpmHzButton.setClickingTogglesState(true);
+
+    
+    // BPM starts active
+    bpmButton.setToggleState(true, juce::dontSendNotification);
+
+    auto setupButton = [&](juce::TextButton& b)
+    {
+        b.setColour(juce::TextButton::buttonOnColourId, juce::Colour(104, 176, 171));
+        b.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
+        b.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
+        b.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
+        b.setClickingTogglesState(true);
+        addAndMakeVisible(b);
+    };
+
+    setupButton(bpmButton);
+    setupButton(hzButton);
+    setupButton(bpmHzButton);
+
+    // --- Button logic ---
+    bpmButton.onClick = [this]() {
+        if (bpmButton.getToggleState())
+        {
+            hzButton.setToggleState(false, juce::dontSendNotification);
+            bpmHzButton.setToggleState(false, juce::dontSendNotification);
+            audioProcessor.currentMode = LFO2AudioProcessor::RateMode::BPM;
+
+            // Convert Hz → division
+            float currentHz = audioProcessor.lfo.getRateHz();
+            float bpm = audioProcessor.bpm;
+            float division = (bpm / 60.0f) / currentHz;
+            audioProcessor.division = division;
+            updateTimeSliderFromDivision();
+        }
+    };
+
+    hzButton.onClick = [this]() {
+        if (hzButton.getToggleState())
+        {
+            bpmButton.setToggleState(false, juce::dontSendNotification);
+            bpmHzButton.setToggleState(false, juce::dontSendNotification);
+            audioProcessor.currentMode = LFO2AudioProcessor::RateMode::HZ;
+
+
+            float hz = (audioProcessor.bpm / 60.0f) / audioProcessor.division;
+            timeSlider.setRange(0.1, 10.0, 0.01);
+            timeSlider.setValue(hz, juce::dontSendNotification);
+            timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
+
+            audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
+            waveEditor.setAnimationSpeed(audioProcessor.lfo.getRateHz());
+        }
+    };
+
+    bpmHzButton.onClick = [this]() {
+        if (bpmHzButton.getToggleState())
+        {
+            bpmButton.setToggleState(false, juce::dontSendNotification);
+            hzButton.setToggleState(false, juce::dontSendNotification);
+            audioProcessor.currentMode = LFO2AudioProcessor::RateMode::BPM_HZ;
+
+            // TODO: implement behavior here 
+        }
+    };
+
+    //----------------------------------------------------------
+
+
+
+
     //Time slider label
     timeLabel.setText("Division", juce::dontSendNotification);
     timeLabel.setFont(juce::Font(14.0f, juce::Font::bold));
@@ -143,11 +220,32 @@ LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
 //==============================================================================
 void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very often so dont put anything crazy in here 
 {
-    g.fillAll(juce::Colours::black);
 
-    g.setColour (juce::Colours::green);
+    juce::Colour backgroundColour = juce::Colour(47, 62, 70);
+    g.fillAll(backgroundColour);
+
+    g.setColour (juce::Colour(202, 210, 197));
     g.setFont (juce::FontOptions (30.0f));
     g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
+
+
+
+
+    // Draw button glows **behind the buttons**
+    auto drawGlowBehind = [&](juce::TextButton& button, juce::Colour glowColour)
+    {
+        if (button.getToggleState())
+        {
+            auto bounds = button.getBounds().toFloat().expanded(4.0f); // expand a little
+            juce::DropShadow shadow(glowColour.withAlpha(0.8f), 25, juce::Point<int>(0, 0));
+            shadow.drawForRectangle(g, bounds.getSmallestIntegerContainer());
+        }
+    };
+
+    drawGlowBehind(bpmButton, juce::Colour(82, 121, 111));
+    drawGlowBehind(hzButton, juce::Colour(82, 121, 111));
+    drawGlowBehind(bpmHzButton, juce::Colour(82, 121, 111));
+
 
 
 
@@ -175,6 +273,28 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
 
 
 }
+
+/*
+void LFO2AudioProcessorEditor::paintOverChildren(juce::Graphics& g)
+{
+    auto drawGlowBorder = [&](juce::TextButton& button, juce::Colour glowColour)
+    {
+        if (button.getToggleState())
+        {
+            auto bounds = button.getBounds().toFloat().reduced(-4.0f); // expands slightly outside
+            juce::DropShadow shadow(glowColour.withAlpha(0.8f), 30, juce::Point<int>(0, 0));
+            shadow.drawForRectangle(g, bounds.getSmallestIntegerContainer());
+
+        }
+    };
+
+    drawGlowBorder(bpmButton, juce::Colours::lime);
+    drawGlowBorder(hzButton, juce::Colours::cyan);
+    drawGlowBorder(bpmHzButton, juce::Colours::orange);
+}
+*/
+
+
 
 void LFO2AudioProcessorEditor::resized()
 {
@@ -205,6 +325,12 @@ void LFO2AudioProcessorEditor::resized()
     lfoShapeSelector.setBounds(getWidth() / 2 + 30, 80, 100, 25);
 
 
+    //rate to hz 
+    int buttonWidth = 50, buttonHeight = 25;
+    bpmButton.setBounds(210, 100, buttonWidth, buttonHeight);
+    hzButton.setBounds(210, 130, buttonWidth, buttonHeight);
+    bpmHzButton.setBounds(210, 160, buttonWidth, buttonHeight);
+
 }
 
 //should be whats fitting the slider data to the global volume
@@ -213,10 +339,13 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
         audioProcessor.globalVolume = (float)midiVolume.getValue();
     }
     else if (slider == &mixKnob) {
-        audioProcessor.mix = (float)mixKnob.getValue();
+        audioProcessor.mix = (float)mixKnob.getValue(), juce::dontSendNotification;
     }
     else if (slider == &timeSlider)
     {
+        
+       if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM) {
+       
         int selection = (int)timeSlider.getValue();
 
         switch (selection)
@@ -242,22 +371,53 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
             timeValueLabel.setText("1/4", juce::dontSendNotification);  
             break;
         }
-
-
         audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
-
-        
         float newRateHz = audioProcessor.getLFORateHz();
         waveEditor.setAnimationSpeed(newRateHz);
-    }
-
+        }
     
+    else if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::HZ) //switching between buttons 
+    {
+        float hz = (float)timeSlider.getValue();
+        timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
+        audioProcessor.lfo.setSampleRate(audioProcessor.getSampleRate());
+        audioProcessor.lfo.setRate(60.0f * hz, 1.0f); // treat as direct Hz instead 
+        waveEditor.setAnimationSpeed(hz);
+    } 
+   }
 }
 
 void LFO2AudioProcessorEditor::timerCallback()
 {
     float lfoRateHz = audioProcessor.getLFORateHz();  // expose a getter from your processor
     waveEditor.setAnimationSpeed(lfoRateHz);
+
+    repaint();
+
+}
+
+
+//helper for updating slider into BPM
+
+void LFO2AudioProcessorEditor::updateTimeSliderFromDivision()
+{
+    if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM)
+    {
+        timeSlider.setRange(1, 5, 1);
+
+        float division = audioProcessor.division;
+        int sliderValue = 1;
+        juce::String text = "1/16";
+
+        if (division == 16) { sliderValue = 1; text = "1/16"; }
+        else if (division == 4) { sliderValue = 2; text = "1/8"; }
+        else if (division == 1) { sliderValue = 3; text = "1/4"; }
+        else if (division == 0.5) { sliderValue = 4; text = "1/2"; }
+        else if (division == 0.25) { sliderValue = 5; text = "1/1"; }
+
+        timeSlider.setValue(sliderValue, juce::dontSendNotification);
+        timeValueLabel.setText(text, juce::dontSendNotification);
+    }
 }
 
 

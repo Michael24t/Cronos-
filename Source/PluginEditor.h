@@ -116,8 +116,9 @@ public:
 
     //==============================================================================
     void paint (juce::Graphics&) override;
+    //void paintOverChildren(juce::Graphics& g);
     void resized() override;
-
+    void updateTimeSliderFromDivision();
 
 
 private:
@@ -144,7 +145,11 @@ private:
 
     void timerCallback() override;
 
-    
+
+    juce::TextButton bpmButton{ "BPM" };
+    juce::TextButton hzButton{ "Hz" };
+    juce::TextButton bpmHzButton{ "BPM/Hz" };
+
 
     GlowEffect volumeGlow; //for glow 
 
