@@ -121,6 +121,16 @@ public:
     void updateTimeSliderFromDivision();
 
 
+
+    float bpmDivisionToHz(float bpm, float division)
+    {
+        float beatsPerSecond = bpm / 60.0f;
+        return beatsPerSecond / division;
+    }
+
+    float positionToHz(float pos, float bpm); //conversion helper funcctions for even spacing 
+    float hzToPosition(float hz, float bpm);
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -152,6 +162,29 @@ private:
 
 
     GlowEffect volumeGlow; //for glow 
+
+
+    struct TimeDivision
+    {
+        juce::String name;
+        float division; // Set up common time divisions
+    };
+
+    std::vector<TimeDivision> divisions = {
+        {"1/16", 4.0f},
+        {"1/8", 2.0f},
+        {"1/4", 1.0f},
+        {"1/2", 0.5f},
+        {"1/1", 0.25f}
+    };
+    std::map<float, float> divisionPositions = { //Equal distance between time sliders
+    {0.0f, 4.0f},  // 1/16
+    {0.25f, 2.0f}, // 1/8
+    {0.5f, 1.0f},  // 1/4
+    {0.75f, 0.5f}, // 1/2
+    {1.0f, 0.25f}  // 1/1
+    };
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LFO2AudioProcessorEditor)
 };

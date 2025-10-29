@@ -120,7 +120,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
             hzButton.setToggleState(false, juce::dontSendNotification);
             audioProcessor.currentMode = LFO2AudioProcessor::RateMode::BPM_HZ;
 
-            // TODO: implement behavior here 
+            timeSlider.setRange(0.0, 1.0, 0.0001);
+            timeSlider.setValue(hzToPosition(audioProcessor.lfo.getRateHz(), audioProcessor.bpm),juce::dontSendNotification);
         }
     };
 
@@ -209,6 +210,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
 
 
+
+
 }
 
 
@@ -270,29 +273,15 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colours::lime);
 
 
-
-
-}
-
-/*
-void LFO2AudioProcessorEditor::paintOverChildren(juce::Graphics& g)
-{
-    auto drawGlowBorder = [&](juce::TextButton& button, juce::Colour glowColour)
+    if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ)
     {
-        if (button.getToggleState())
-        {
-            auto bounds = button.getBounds().toFloat().reduced(-4.0f); // expands slightly outside
-            juce::DropShadow shadow(glowColour.withAlpha(0.8f), 30, juce::Point<int>(0, 0));
-            shadow.drawForRectangle(g, bounds.getSmallestIntegerContainer());
+        if (timeValueLabel.getText().contains("/"))
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+        else
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    }
 
-        }
-    };
-
-    drawGlowBorder(bpmButton, juce::Colours::lime);
-    drawGlowBorder(hzButton, juce::Colours::cyan);
-    drawGlowBorder(bpmHzButton, juce::Colours::orange);
 }
-*/
 
 
 
@@ -384,6 +373,53 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
         audioProcessor.lfo.setRate(60.0f * hz, 1.0f); // treat as direct Hz instead 
         waveEditor.setAnimationSpeed(hz);
     } 
+    else if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ) //bpm/hz mode 
+       {
+           float pos = (float)timeSlider.getValue();   
+           float bpm = audioProcessor.bpm;
+
+           float snapThreshold = 0.02f; // Tweak for lock in feature higher is bigger lock/ snap 
+           float snappedPos = pos;
+           bool snapped = false;
+           juce::String closestLabel;
+
+           for (auto& [divisionPos, divisionVal] : divisionPositions)
+           {
+               if (std::abs(pos - divisionPos) < snapThreshold)
+               {
+                   snappedPos = divisionPos;
+                   snapped = true;
+                   
+                   for (auto& div : divisions) // need to find closest label
+                   {
+                       if (div.division == divisionVal)
+                       {
+                           closestLabel = div.name;
+                           break;
+                       }
+                   }
+
+                   break;
+               }
+           }
+
+           if (snapped)
+               timeSlider.setValue(snappedPos, juce::dontSendNotification);
+
+           // convert to hz 
+           float hzValue = positionToHz(snappedPos, bpm);
+
+           //Update LFO and animation speed
+           audioProcessor.lfo.setRate(bpm, (bpm / 60.0f) / hzValue);
+           waveEditor.setAnimationSpeed(hzValue);
+
+           // label updating 
+           if (snapped)
+               timeValueLabel.setText(closestLabel, juce::dontSendNotification);
+           else
+               timeValueLabel.setText(juce::String(hzValue, 2) + " Hz", juce::dontSendNotification);
+       }
+
    }
 }
 
@@ -418,6 +454,50 @@ void LFO2AudioProcessorEditor::updateTimeSliderFromDivision()
         timeSlider.setValue(sliderValue, juce::dontSendNotification);
         timeValueLabel.setText(text, juce::dontSendNotification);
     }
+}
+
+
+
+float LFO2AudioProcessorEditor::positionToHz(float pos, float bpm) //conversion helper functions 
+{
+    auto lower = divisionPositions.lower_bound(pos);
+    if (lower == divisionPositions.begin())
+        return bpmDivisionToHz(bpm, lower->second);
+    if (lower == divisionPositions.end())
+        return bpmDivisionToHz(bpm, std::prev(lower)->second);
+
+    auto upper = lower--;
+    float x1 = lower->first, x2 = upper->first;
+    float d1 = lower->second, d2 = upper->second;
+
+    float t = (pos - x1) / (x2 - x1);
+
+    // Interpolate logarithmically between divisions
+    float hz1 = bpmDivisionToHz(bpm, d1);
+    float hz2 = bpmDivisionToHz(bpm, d2);
+    float hz = hz1 * std::pow(hz2 / hz1, t);
+
+    return hz;
+}
+
+float LFO2AudioProcessorEditor::hzToPosition(float hz, float bpm)
+{
+    std::vector<float> positions;
+    for (auto& [p, div] : divisionPositions)
+        positions.push_back(p);
+
+    for (int i = 0; i < positions.size() - 1; ++i)
+    {
+        float hz1 = bpmDivisionToHz(bpm, divisionPositions.at(positions[i]));
+        float hz2 = bpmDivisionToHz(bpm, divisionPositions.at(positions[i + 1]));
+        if (hz >= hz1 && hz <= hz2)
+        {
+            float t = std::log(hz / hz1) / std::log(hz2 / hz1);
+            return juce::jmap(t, 0.0f, 1.0f, positions[i], positions[i + 1]);
+        }
+    }
+
+    return 0.0f;
 }
 
 
