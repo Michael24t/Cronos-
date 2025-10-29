@@ -40,7 +40,7 @@ public:
     {
         g.setColour(currentGlowColour);
         g.setFont(juce::Font(40.0f, juce::Font::bold));
-        g.drawFittedText("Chronos", getLocalBounds(), juce::Justification::centred, 1);
+        g.drawFittedText("Chronos DAW", getLocalBounds(), juce::Justification::centred, 1);
     }
 
 private:

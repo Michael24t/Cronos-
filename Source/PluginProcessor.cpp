@@ -22,6 +22,13 @@ LFO2AudioProcessor::LFO2AudioProcessor()
                        )
 #endif
 {
+    bpm = 120.0f;  //safe defaults for DAW
+    division = 1.0f;
+    mix = 1.0f;
+    globalVolume = 1.0f;
+    usingTestAudio = false;
+
+    formatManager.registerBasicFormats();
 }
 
 LFO2AudioProcessor::~LFO2AudioProcessor()
@@ -93,17 +100,33 @@ void LFO2AudioProcessor::changeProgramName (int index, const juce::String& newNa
 //==============================================================================
 void LFO2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-
+    juce::ignoreUnused(samplesPerBlock); //for instant playback debug 
     formatManager.registerBasicFormats();
 
+
+    if (sampleRate <= 0.0)
+        sampleRate = 44100.0;
+
+    
+    lfo.setSampleRate(sampleRate);
+    lfo.reset();
+
+
+
+    // fallback values incase of incorrect initialization
+    bpm = std::isfinite(bpm) && bpm > 0.0f ? bpm : 120.0f;
+    division = std::isfinite(division) && division > 0.0f ? division : 1.0f;
+    mix = juce::jlimit(0.0f, 1.0f, mix);
+    globalVolume = std::max(0.0f, globalVolume);
+
     // === Load hardcoded WAV file (for standalone debug only) ===
-#if JucePlugin_Build_Standalone
     //juce::File testFile("C:/Users/Michael/Desktop/DJ Tumminia/Songs/wasted x midnight city (one shot high bpm).mp3"); // <-- change this path!
-    juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/unisonSin.mp3"); // <-- change this path!
+    //juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/unisonSin.mp3"); // <-- change this path!
     //juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/nothingNoise.mp3");
 
+       // Don’t load test files in a DAW — only in standalone builds
+#if JucePlugin_Build_Standalone
+    juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/unisonSin.mp3");
     if (testFile.existsAsFile())
     {
         if (auto* reader = formatManager.createReaderFor(testFile))
@@ -116,13 +139,13 @@ void LFO2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
             usingTestAudio = true;
         }
     }
+    else {
+        usingTestAudio = false;
+    }
+#else
+    usingTestAudio = false;
 #endif
 
-    bpm = 122.0f;
-    lfo.setSampleRate(sampleRate);
-    lfo.setRate(bpm, division);
-
-   
 }
 
 void LFO2AudioProcessor::releaseResources()
@@ -170,39 +193,37 @@ void LFO2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 
     if (usingTestAudio)
     {
+#if JucePlugin_Build_Standalone
         juce::AudioSourceChannelInfo info(buffer);
         transportSource.getNextAudioBlock(info);
+#endif
     }
 
-    for (int channel = 0; channel < getTotalNumOutputChannels(); ++channel)
+
+    if (auto* playHead = getPlayHead())  //setting DAW bpm 
+    {
+        juce::AudioPlayHead::CurrentPositionInfo info;
+        if (playHead->getCurrentPosition(info))
+        {
+            if (info.bpm > 0.0)
+                bpm = (float)info.bpm;
+        }
+    }
+    lfo.setRate(bpm, division);
+
+
+    for (int channel = 0; channel < getTotalNumOutputChannels(); ++channel) //processing of audio 
     {
         auto* samples = buffer.getWritePointer(channel);
 
         for (int i = 0; i < buffer.getNumSamples(); ++i)
         {
-            float lfoValue = lfo.getNextSample(); // e.g. 0–1
+            float lfoValue = lfo.getNextSample(); 
             float lfoGain = juce::jmap(lfoValue, 0.0f, 1.0f, 0.0f, 1.0f);
             float gain = (1.0f - mix) + (mix * lfoGain);
             samples[i] *= gain * globalVolume;
         }
     }
-
-
-    // === Apply Volume (will affect test file and real DAW audio equally) ===
-    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-    {
-        buffer.applyGain(channel, 0, buffer.getNumSamples(), globalVolume);
-    }
-
-    //NORMAL OUTPUT BELOW
-    /*
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
-    */
 }
 
 //==============================================================================
