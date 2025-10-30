@@ -370,7 +370,10 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
         float hz = (float)timeSlider.getValue();
         timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
         audioProcessor.lfo.setSampleRate(audioProcessor.getSampleRate());
-        audioProcessor.lfo.setRate(60.0f * hz, 1.0f); // treat as direct Hz instead 
+        
+        audioProcessor.currentHz = hz;  
+        audioProcessor.currentMode = LFO2AudioProcessor::RateMode::HZ;
+
         waveEditor.setAnimationSpeed(hz);
     } 
     else if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ) //bpm/hz mode 
