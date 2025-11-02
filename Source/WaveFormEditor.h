@@ -50,7 +50,7 @@ public:
     void paint(juce::Graphics& g) override
     {
         g.fillAll(juce::Colours::black.darker(0.2f));
-        g.setColour(juce::Colours::darkgrey);
+        g.setColour(juce::Colour(44, 44, 49));
         g.fillRect(getLocalBounds().reduced(6));
 
         auto area = getLocalBounds().reduced(10);
@@ -73,14 +73,14 @@ public:
             }
         }
 
-        g.setColour(juce::Colours::lime);
+        g.setColour(juce::Colour(40, 246, 177));
         g.strokePath(p, juce::PathStrokeType(2.0f));
 
         // draw control points
         for (size_t i = 0; i < points.size(); ++i)
         {
             auto pixel = toPixel(points[i]);
-            g.setColour(juce::Colours::white);
+            g.setColour(juce::Colour(157, 251, 220)); //Control pointsm Light green
             g.fillEllipse(pixel.x - 4.0f, pixel.y - 4.0f, 8.0f, 8.0f);
         }
 
@@ -95,7 +95,7 @@ public:
                 juce::Point<float> mid = (p1 + p2) * 0.5f;
                 // visual offset: scale tension to pixels
                 mid.y -= tension * 40.0f;
-                g.setColour(juce::Colours::orange);
+                g.setColour(juce::Colour(74, 154, 211)); //Dark blue
                 g.fillEllipse(mid.x - 4.0f, mid.y - 4.0f, 8.0f, 8.0f);
             }
         }
@@ -104,7 +104,7 @@ public:
         if (selected >= 0 && selected < (int)points.size())
         {
             auto s = toPixel(points[selected]);
-            g.setColour(juce::Colours::yellow);
+            g.setColour(juce::Colour(140, 191, 227));//light blue
             g.drawEllipse(s.x - 6.0f, s.y - 6.0f, 12.0f, 12.0f, 2.0f);
         }
         // highlight selected segment handle
@@ -114,7 +114,7 @@ public:
             auto p2 = toPixel(points[selectedSegment + 1]);
             juce::Point<float> mid = (p1 + p2) * 0.5f;
             mid.y -= segments[selectedSegment].tension * 40.0f;
-            g.setColour(juce::Colours::yellow);
+            g.setColour(juce::Colour(140, 191, 227)); //light blue 
             g.drawEllipse(mid.x - 6.0f, mid.y - 6.0f, 12.0f, 12.0f, 2.0f);
         }
 

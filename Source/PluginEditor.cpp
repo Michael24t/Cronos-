@@ -187,8 +187,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
     // Text above LFO selector 
     lfoShapeLabel.setText("LFO Shape", juce::dontSendNotification);
-    lfoShapeLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-    lfoShapeLabel.setJustificationType(juce::Justification::centred);
+    lfoShapeLabel.setFont(titleFont.withHeight(20.0f));
+    lfoShapeLabel.setJustificationType(juce::Justification::left); //geting it on left of page thing
     addAndMakeVisible(lfoShapeLabel);
 
     //LFO selector dropdown 
@@ -241,7 +241,7 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
 
     g.setColour (juce::Colour(142,230,179));
-    g.setFont(titleFont);
+    g.setFont(titleFont.withHeight(40.0f));  //.withHeight can change the overall size of the font
     g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
 
 
@@ -272,7 +272,8 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     timeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
 
     timeLabel.setColour(juce::Label::textColourId, juce::Colours::darkgrey);
-    timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    timeValueLabel.setFont(titleFont);
+    timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(35, 247, 176));
 
     mixKnob.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
     mixKnob.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
@@ -281,9 +282,13 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
 
 
     //combobox == dropdown
-    lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black);
-    lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colours::white);
-    lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colours::lime);
+    lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(44, 44, 49));
+    lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colour(142, 230, 179));
+    lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(35, 247, 176));
+
+
+    lfoShapeLabel.setColour(juce::Label::textColourId, juce::Colour(35,247,176));
+    //lfoShapeLabel.setColour(juce::Label::outlineColourId, juce::Colour(142, 230, 179));
 
 
     if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ)
@@ -322,8 +327,8 @@ void LFO2AudioProcessorEditor::resized()
 
     //dropdown
     auto topArea = getLocalBounds().removeFromTop(80);
-    lfoShapeLabel.setBounds(getWidth() / 2 +30, 60, 100, 20);
-    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 80, 100, 25);
+    lfoShapeLabel.setBounds(getWidth() / 2 +10, 40, 300, 30);
+    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 70, 100, 25);
 
 
     //rate to hz 
