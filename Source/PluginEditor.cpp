@@ -13,6 +13,8 @@
 
 
 
+
+
 WaveformEditor waveEditor;  
 //GlowEffect volumeGlow;
 //==============================================================================
@@ -29,7 +31,16 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     setResizable(true, true);   //dynamic resize
     getConstrainer()->setFixedAspectRatio(1.5);
 
-    addAndMakeVisible(titleGlow);
+
+    // Load font once
+    auto typeface = juce::Typeface::createSystemTypefaceFor(  //load font just once 
+        BinaryData::AudiowideRegular_ttf,
+        BinaryData::AudiowideRegular_ttfSize
+    );
+    titleFont = juce::Font(typeface);
+    titleFont.setHeight(40.0f);
+    //titleFont.setBold(true); // change for bold 
+
 
     //Volume slidr
     midiVolume.setSliderStyle(juce::Slider::LinearBarVertical);
@@ -224,11 +235,13 @@ LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
 void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very often so dont put anything crazy in here 
 {
 
-    juce::Colour backgroundColour = juce::Colour(47, 62, 70);
-    g.fillAll(backgroundColour);
 
-    g.setColour (juce::Colour(202, 210, 197));
-    g.setFont (juce::FontOptions (30.0f));
+
+    juce::Colour backgroundColour = juce::Colour(63, 63, 68);
+    g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
+
+    g.setColour (juce::Colour(142,230,179));
+    g.setFont(titleFont);
     g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
 
 
@@ -303,7 +316,6 @@ void LFO2AudioProcessorEditor::resized()
 
     customKnob.setBounds(250, 200, 128, 128);
 
-    titleGlow.setBounds(0, 10, getWidth(), 60);
 
 
     waveEditor.setBounds(getWidth() / 2 + 20, 100, getWidth() / 2 - 40, getHeight() - 140);

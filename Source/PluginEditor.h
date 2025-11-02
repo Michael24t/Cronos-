@@ -19,57 +19,6 @@
 
 extern WaveformEditor waveEditor; //idk if this works 
 
-class GlowTitle : public juce::Component,
-    private juce::Timer
-{
-public:
-    GlowTitle()
-    {
-        // Simulate a "glow" using a DropShadowEffect
-        shadow.setShadowProperties({
-            juce::Colours::green.withAlpha(0.7f),
-            20,  // blur radius
-            { 0, 0 } // offset (centered)
-            });
-        setComponentEffect(&shadow);
-
-        startTimerHz(60); // update ~60 times per second
-    }
-
-    void paint(juce::Graphics& g) override
-    {
-        g.setColour(currentGlowColour);
-        g.setFont(juce::Font(40.0f, juce::Font::bold));
-        g.drawFittedText("Chronos DAW", getLocalBounds(), juce::Justification::centred, 1);
-    }
-
-private:
-    juce::DropShadowEffect shadow;
-    juce::Colour currentGlowColour = juce::Colours::lime;
-    float hueOffset = 0.0f;
-
-
-    void timerCallback() override
-    {
-        // Slowly cycle hue over time
-        hueOffset += 0.002f;
-        if (hueOffset > 1.0f)
-            hueOffset -= 1.0f;
-
-        currentGlowColour = juce::Colour::fromHSV(hueOffset, 1.0f, 1.0f, 0.9f);
-
-        // Update the glow color dynamically
-        shadow.setShadowProperties({
-            currentGlowColour.withAlpha(0.7f),
-            20,
-            { 0, 0 }
-            });
-
-        repaint(); // triggers paint()
-    }
-};
-
-
 class ImageKnob : public juce::Slider
 {
 public:
@@ -146,7 +95,6 @@ private:
     ImageKnob customKnob;
     juce::Image knobImg; //persistent imaging 
 
-    GlowTitle titleGlow;
 
     juce::ComboBox lfoShapeSelector;
     juce::Label lfoShapeLabel;
@@ -159,6 +107,8 @@ private:
     juce::TextButton bpmButton{ "BPM" };
     juce::TextButton hzButton{ "Hz" };
     juce::TextButton bpmHzButton{ "BPM/Hz" };
+
+    juce::Font titleFont; // futuristic font 
 
 
     GlowEffect volumeGlow; //for glow 
