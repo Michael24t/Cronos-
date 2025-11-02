@@ -8,11 +8,14 @@
 
 namespace BinaryData
 {
+    extern const char*   cronosLogo_png;
+    const int            cronosLogo_pngSize = 18044;
+
     extern const char*   AudiowideRegular_ttf;
     const int            AudiowideRegular_ttfSize = 47676;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 1;
+    const int namedResourceListSize = 2;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

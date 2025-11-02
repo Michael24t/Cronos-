@@ -220,6 +220,11 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     addAndMakeVisible(lfoShapeSelector);
 
 
+    //logo stuff 
+
+    auto logo = juce::ImageCache::getFromMemory(BinaryData::cronosLogo_png, BinaryData::cronosLogo_pngSize); 
+    logoImage.setImage(logo);
+    addAndMakeVisible(logoImage);
 
 
 
@@ -240,9 +245,10 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     juce::Colour backgroundColour = juce::Colour(63, 63, 68);
     g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
 
-    g.setColour (juce::Colour(142,230,179));
-    g.setFont(titleFont.withHeight(40.0f));  //.withHeight can change the overall size of the font
-    g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
+    g.setColour (juce::Colour(33, 247, 176));
+    g.setFont(titleFont.withHeight(60.0f));  //.withHeight can change the overall size of the font
+    auto titleArea = juce::Rectangle<int>(55, 7.5, 300, 50);
+    g.drawFittedText ("Chronos", titleArea, juce::Justification::top, 1);
 
 
 
@@ -291,6 +297,8 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     //lfoShapeLabel.setColour(juce::Label::outlineColourId, juce::Colour(142, 230, 179));
 
 
+   
+
     if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ)
     {
         if (timeValueLabel.getText().contains("/"))
@@ -336,6 +344,9 @@ void LFO2AudioProcessorEditor::resized()
     bpmButton.setBounds(210, 100, buttonWidth, buttonHeight);
     hzButton.setBounds(210, 130, buttonWidth, buttonHeight);
     bpmHzButton.setBounds(210, 160, buttonWidth, buttonHeight);
+
+
+    logoImage.setBounds(-10, 5, 80, 80);
 
 }
 

@@ -110,6 +110,8 @@ private:
 
     juce::Font titleFont; // futuristic font 
 
+    juce::ImageComponent logoImage;
+
 
     GlowEffect volumeGlow; //for glow 
 

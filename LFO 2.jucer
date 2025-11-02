@@ -5,6 +5,7 @@
               pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" displaySplashScreen="1">
   <MAINGROUP id="xgcdZ0" name="LFO 2">
     <GROUP id="{785B52DF-2774-0FBD-6741-A4D82251DE45}" name="Resources">
+      <FILE id="I5gJlA" name="cronosLogo.png" compile="0" resource="1" file="Pictures/Logo/cronosLogo.png"/>
       <FILE id="BjZjO2" name="Audiowide-Regular.ttf" compile="0" resource="1"
             file="../../../Downloads/Audiowide/Audiowide-Regular.ttf"/>
     </GROUP>
