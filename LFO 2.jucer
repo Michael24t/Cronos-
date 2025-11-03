@@ -10,6 +10,10 @@
             file="../../../Downloads/Audiowide/Audiowide-Regular.ttf"/>
     </GROUP>
     <GROUP id="{77144C6C-5C5F-6166-D82C-5AC1F77E5A98}" name="Source">
+      <FILE id="qLMcXO" name="CustomLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/CustomLookAndFeel.cpp"/>
+      <FILE id="EJp3cR" name="CustomLookAndFeel.h" compile="0" resource="0"
+            file="Source/CustomLookAndFeel.h"/>
       <FILE id="WCcaxV" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="JHM1XH" name="PluginProcessor.h" compile="0" resource="0"

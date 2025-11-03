@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include "WaveFormEditor.h"
 #include "GlowEffect.h"
+#include "CustomLookAndFeel.h"
 
 //==============================================================================
 /**
@@ -114,6 +115,9 @@ private:
 
 
     GlowEffect volumeGlow; //for glow 
+
+    CustomLookAndFeel customLAF;
+
 
 
     struct TimeDivision
