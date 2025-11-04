@@ -119,12 +119,16 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
 
             float hz = (audioProcessor.bpm / 60.0f) / audioProcessor.division;
+
+            // Set up slider
             timeSlider.setRange(0.1, 10.0, 0.01);
             timeSlider.setValue(hz, juce::dontSendNotification);
             timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
 
-            audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
-            waveEditor.setAnimationSpeed(audioProcessor.lfo.getRateHz());
+            // Actually set the LFO to Hz rate
+            audioProcessor.currentHz = hz;
+            audioProcessor.lfo.setRateHz(hz);
+            waveEditor.setAnimationSpeed(hz);
         }
     };
 
@@ -330,9 +334,9 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ)
     {
         if (timeValueLabel.getText().contains("/"))
-            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(238, 99, 82));
         else
-            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(35, 247, 176));
     }
 
 }
@@ -469,7 +473,8 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
            float hzValue = positionToHz(snappedPos, bpm);
 
            //Update LFO and animation speed
-           audioProcessor.lfo.setRate(bpm, (bpm / 60.0f) / hzValue);
+           //audioProcessor.lfo.setRate(bpm, (bpm / 60.0f) / hzValue);
+           audioProcessor.currentHz = pos;
            waveEditor.setAnimationSpeed(hzValue);
 
            // label updating 

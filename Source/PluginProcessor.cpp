@@ -193,11 +193,12 @@ void LFO2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         break;
 
     case RateMode::HZ:
-        lfo.setRate(60.0f * currentHz, 1.0f); // or store a member variable for Hz
+        //lfo.setRate(60.0f * currentHz, 1.0f); // or store a member variable for Hz
+        lfo.setRateHz(currentHz);
         break;
 
     case RateMode::BPM_HZ:
-        lfo.setRate(bpm, division); // or whichever mapping you want
+        lfo.setRateHz(currentHz); // or whichever mapping you want
         break;
     }
 
