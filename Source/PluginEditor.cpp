@@ -57,7 +57,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
     //time division slider 
     timeSlider.setSliderStyle(juce::Slider::Rotary);
-    timeSlider.setRange(1, 5, 1); // three discrete positions
+    timeSlider.setRange(1, 5, 1); 
     timeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 60, 20);
     timeSlider.setValue(1); // start on 1/16th
     timeSlider.addListener(this);   
@@ -167,8 +167,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 60, 20);
     mixKnob.setValue(1.0);
     //mixKnob.setColour(juce::Slider::mixKnob, juce::Colours::orange);
-    mixKnob.setPopupDisplayEnabled(true, false, this);
-    mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    mixKnob.setPopupDisplayEnabled(false, false, this);
+    mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 20);
     mixKnob.setTextValueSuffix(" Mix");
     mixKnob.addListener(this);
     addAndMakeVisible(mixKnob);
@@ -179,9 +179,9 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     juce::File knobFile("C:/Users/Michael/Desktop/Cronos/Cronos-/Pictures/Knobs/test.png");// path for now
     knobImg = juce::ImageFileFormat::loadFrom(knobFile);
 
-    customKnob.setKnobImage(knobImg, 128); // specify frame count (check your file)
+    customKnob.setKnobImage(knobImg, 128); 
     customKnob.setRange(0.0, 1.0, 0.01);
-    addAndMakeVisible(customKnob);
+    //addAndMakeVisible(customKnob);   //custom knob dont display for now
 
 
     addAndMakeVisible(waveEditor);
@@ -255,7 +255,9 @@ LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
 void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very often so dont put anything crazy in here 
 {
 
-
+    //rectangle initialization 
+    
+  
 
     juce::Colour backgroundColour = juce::Colour(63, 63, 68);
     g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
@@ -266,8 +268,35 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     g.drawFittedText ("Chronos", titleArea, juce::Justification::top, 1);
 
 
+    const float cornerSize = 10.0f; // Adjust this for desired corner radius
+    juce::Rectangle<float> area(95.0f, 85.0f, 300.0f, 200.0f); // Or define your own rectangle
 
+    g.setColour(juce::Colour(48,48,54)); // Set your desired color
+    g.fillRoundedRectangle(area, cornerSize);
 
+    //gradient
+    juce::Colour edge1 = juce::Colour::fromRGB(35, 247, 176);  // bright neon
+    juce::Colour edge2 = juce::Colour::fromRGB(63, 63, 68);    // darker edge
+
+    juce::ColourGradient borderGradient(
+        edge1,    
+        area.getRight(), area.getBottom(), // start colour           
+        edge2,                              // end colour
+        area.getX(), area.getY(),          // gradient end point (bottom-right)
+        false                               // not radial
+    );
+
+    borderGradient.addColour(0.5, edge1.brighter()); // mid-shimmer optional
+
+    g.setGradientFill(borderGradient);
+
+    float borderThickness = 3.0f;
+    g.drawRoundedRectangle(area, cornerSize, borderThickness);
+
+    //-------------------------
+    // 
+    // 
+// 
     // Draw button glows **behind the buttons**
     auto drawGlowBehind = [&](juce::TextButton& button, juce::Colour glowColour)
     {
@@ -287,19 +316,21 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
 
 
     // In your component's constructor or a relevant method
-    timeSlider.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
-    timeSlider.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
-    timeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::green); // For rotary sliders
-    timeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
+    timeSlider.setColour(juce::Slider::thumbColourId, juce::Colour(35, 247, 176)); // Changes the color of the slider's thumb
+    //timeSlider.setColour(juce::Slider::trackColourId, juce::Colours::green); // Changes the color of the slider's track
+    timeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(10,10,10)); // For rotary sliders
+    timeSlider.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(87, 87, 96)); // General background
+    
 
     timeLabel.setColour(juce::Label::textColourId, juce::Colours::darkgrey);
     timeValueLabel.setFont(titleFont.withHeight(30.0f));
     timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(35, 247, 176));
 
-    mixKnob.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
-    mixKnob.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
-    mixKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::green); // For rotary sliders
-    mixKnob.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
+    mixKnob.setColour(juce::Slider::thumbColourId, juce::Colour(35, 247, 176)); // Thumb
+    mixKnob.setColour(juce::Slider::trackColourId, juce::Colour(196, 253, 234)); // Background track 
+    mixKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(10, 10, 10)); // For rotary sliders
+    mixKnob.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(87, 87, 96));
+    
 
 
     //combobox == dropdown
