@@ -22,6 +22,13 @@ LFO2AudioProcessor::LFO2AudioProcessor()
                        )
 #endif
 {
+    bpm = 120.0f;  //safe defaults for DAW
+    division = 1.0f;
+    mix = 1.0f;
+    globalVolume = 1.0f;
+    usingTestAudio = false;
+
+    formatManager.registerBasicFormats();
 }
 
 LFO2AudioProcessor::~LFO2AudioProcessor()
@@ -90,39 +97,28 @@ void LFO2AudioProcessor::changeProgramName (int index, const juce::String& newNa
 {
 }
 
-//==============================================================================
-void LFO2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void LFO2AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) //only daw functionality 
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    juce::ignoreUnused(samplesPerBlock);
+
+    if (sampleRate <= 0.0)
+        sampleRate = 44100.0;
 
     formatManager.registerBasicFormats();
-
-    // === Load hardcoded WAV file (for standalone debug only) ===
-#if JucePlugin_Build_Standalone
-    //juce::File testFile("C:/Users/Michael/Desktop/DJ Tumminia/Songs/wasted x midnight city (one shot high bpm).mp3"); // <-- change this path!
-    juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/unisonSin.mp3"); // <-- change this path!
-    //juce::File testFile("C:/Users/Michael/Desktop/Cronos/Cronos-/tempAudio/nothingNoise.mp3");
-
-    if (testFile.existsAsFile())
-    {
-        if (auto* reader = formatManager.createReaderFor(testFile))
-        {
-            readerSource.reset(new juce::AudioFormatReaderSource(reader, true));
-            transportSource.setSource(readerSource.get(), 0, nullptr, reader->sampleRate);
-            transportSource.setLooping(true);
-            transportSource.prepareToPlay(samplesPerBlock, sampleRate);
-            transportSource.start();
-            usingTestAudio = true;
-        }
-    }
-#endif
-
-    bpm = 122.0f;
     lfo.setSampleRate(sampleRate);
-    lfo.setRate(bpm, division);
+    lfo.reset();
 
-   
+    //safety vals 
+    bpm = std::isfinite(bpm) && bpm > 0.0f ? bpm : 120.0f;
+    division = std::isfinite(division) && division > 0.0f ? division : 1.0f;
+    mix = juce::jlimit(0.0f, 1.0f, mix);
+    globalVolume = std::max(0.0f, globalVolume);
+
+    //Completely remove test audio no standalone test audio loading
+    usingTestAudio = false;
+    readerSource = nullptr;
+    transportSource.releaseResources();
+
 }
 
 void LFO2AudioProcessor::releaseResources()
@@ -168,41 +164,55 @@ void LFO2AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    if (usingTestAudio)
+    if (getSampleRate() <= 0.0)
+        return;
+
+    // Remove test audio block entirely
+
+    // bpm from host 
+    if (auto* playHead = getPlayHead())
     {
-        juce::AudioSourceChannelInfo info(buffer);
-        transportSource.getNextAudioBlock(info);
+        juce::AudioPlayHead::CurrentPositionInfo info;
+        if (playHead->getCurrentPosition(info) && info.bpm > 0.0)
+            bpm = (float)info.bpm;
     }
 
-    for (int channel = 0; channel < getTotalNumOutputChannels(); ++channel)
+    if (!std::isfinite(bpm) || bpm <= 0.0f)
+        bpm = 120.0f;
+    if (!std::isfinite(division) || division <= 0.0f)
+        division = 1.0f;
+    if (!std::isfinite(mix))
+        mix = 1.0f;
+    if (!std::isfinite(globalVolume))
+        globalVolume = 1.0f;
+
+    switch (currentMode)
+    {
+    case RateMode::BPM:
+        lfo.setRate(bpm, division);
+        break;
+
+    case RateMode::HZ:
+        //lfo.setRate(60.0f * currentHz, 1.0f); // or store a member variable for Hz
+        lfo.setRateHz(currentHz);
+        break;
+
+    case RateMode::BPM_HZ:
+        lfo.setRateHz(currentHz); // or whichever mapping you want
+        break;
+    }
+
+    for (int channel = 0; channel < totalNumOutputChannels; ++channel) //should work outside the master now
     {
         auto* samples = buffer.getWritePointer(channel);
-
         for (int i = 0; i < buffer.getNumSamples(); ++i)
         {
-            float lfoValue = lfo.getNextSample(); // e.g. 0–1
-            float lfoGain = juce::jmap(lfoValue, 0.0f, 1.0f, 0.0f, 1.0f);
+            float lfoValue = lfo.getNextSample();
+            float lfoGain = juce::jlimit(0.0f, 1.0f, juce::jmap(lfoValue, 0.0f, 1.0f, 0.0f, 1.0f));
             float gain = (1.0f - mix) + (mix * lfoGain);
             samples[i] *= gain * globalVolume;
         }
     }
-
-
-    // === Apply Volume (will affect test file and real DAW audio equally) ===
-    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-    {
-        buffer.applyGain(channel, 0, buffer.getNumSamples(), globalVolume);
-    }
-
-    //NORMAL OUTPUT BELOW
-    /*
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
-    */
 }
 
 //==============================================================================

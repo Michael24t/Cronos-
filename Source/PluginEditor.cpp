@@ -13,6 +13,8 @@
 
 
 
+
+
 WaveformEditor waveEditor;  
 //GlowEffect volumeGlow;
 //==============================================================================
@@ -29,7 +31,16 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     setResizable(true, true);   //dynamic resize
     getConstrainer()->setFixedAspectRatio(1.5);
 
-    addAndMakeVisible(titleGlow);
+
+    // Load font once
+    auto typeface = juce::Typeface::createSystemTypefaceFor(  //load font just once 
+        BinaryData::AudiowideRegular_ttf,
+        BinaryData::AudiowideRegular_ttfSize
+    );
+    titleFont = juce::Font(typeface);
+    titleFont.setHeight(40.0f);
+    //titleFont.setBold(true); // change for bold 
+
 
     //Volume slidr
     midiVolume.setSliderStyle(juce::Slider::LinearBarVertical);
@@ -46,7 +57,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
     //time division slider 
     timeSlider.setSliderStyle(juce::Slider::Rotary);
-    timeSlider.setRange(1, 5, 1); // three discrete positions
+    timeSlider.setRange(1, 5, 1); 
     timeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 60, 20);
     timeSlider.setValue(1); // start on 1/16th
     timeSlider.addListener(this);   
@@ -59,6 +70,10 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     bpmButton.setClickingTogglesState(true);
     hzButton.setClickingTogglesState(true);
     bpmHzButton.setClickingTogglesState(true);
+
+    bpmButton.setLookAndFeel(&customLAF);
+    hzButton.setLookAndFeel(&customLAF);
+    bpmHzButton.setLookAndFeel(&customLAF);
 
     
     // BPM starts active
@@ -104,12 +119,16 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
 
             float hz = (audioProcessor.bpm / 60.0f) / audioProcessor.division;
+
+            // Set up slider
             timeSlider.setRange(0.1, 10.0, 0.01);
             timeSlider.setValue(hz, juce::dontSendNotification);
             timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
 
-            audioProcessor.lfo.setRate(audioProcessor.bpm, audioProcessor.division);
-            waveEditor.setAnimationSpeed(audioProcessor.lfo.getRateHz());
+            // Actually set the LFO to Hz rate
+            audioProcessor.currentHz = hz;
+            audioProcessor.lfo.setRateHz(hz);
+            waveEditor.setAnimationSpeed(hz);
         }
     };
 
@@ -148,8 +167,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 60, 20);
     mixKnob.setValue(1.0);
     //mixKnob.setColour(juce::Slider::mixKnob, juce::Colours::orange);
-    mixKnob.setPopupDisplayEnabled(true, false, this);
-    mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    mixKnob.setPopupDisplayEnabled(false, false, this);
+    mixKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 20);
     mixKnob.setTextValueSuffix(" Mix");
     mixKnob.addListener(this);
     addAndMakeVisible(mixKnob);
@@ -160,9 +179,9 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     juce::File knobFile("C:/Users/Michael/Desktop/Cronos/Cronos-/Pictures/Knobs/test.png");// path for now
     knobImg = juce::ImageFileFormat::loadFrom(knobFile);
 
-    customKnob.setKnobImage(knobImg, 128); // specify frame count (check your file)
+    customKnob.setKnobImage(knobImg, 128); 
     customKnob.setRange(0.0, 1.0, 0.01);
-    addAndMakeVisible(customKnob);
+    //addAndMakeVisible(customKnob);   //custom knob dont display for now
 
 
     addAndMakeVisible(waveEditor);
@@ -176,8 +195,8 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
     // Text above LFO selector 
     lfoShapeLabel.setText("LFO Shape", juce::dontSendNotification);
-    lfoShapeLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-    lfoShapeLabel.setJustificationType(juce::Justification::centred);
+    lfoShapeLabel.setFont(titleFont.withHeight(20.0f));
+    lfoShapeLabel.setJustificationType(juce::Justification::left); //geting it on left of page thing
     addAndMakeVisible(lfoShapeLabel);
 
     //LFO selector dropdown 
@@ -209,7 +228,14 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     addAndMakeVisible(lfoShapeSelector);
 
 
+    //logo stuff 
 
+    auto logo = juce::ImageCache::getFromMemory(BinaryData::cronosLogo_png, BinaryData::cronosLogo_pngSize); 
+    logoImage.setImage(logo);
+    addAndMakeVisible(logoImage);
+
+
+    //bpmButton.
 
 
 }
@@ -217,6 +243,11 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
 
 
 LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
+
+    bpmButton.setLookAndFeel(nullptr);  //supposed to clean look and feel shit
+    hzButton.setLookAndFeel(nullptr);
+    bpmHzButton.setLookAndFeel(nullptr);
+
 }
 
 
@@ -224,61 +255,119 @@ LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
 void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very often so dont put anything crazy in here 
 {
 
-    juce::Colour backgroundColour = juce::Colour(47, 62, 70);
-    g.fillAll(backgroundColour);
+    //rectangle initialization 
+    
+  
 
-    g.setColour (juce::Colour(202, 210, 197));
-    g.setFont (juce::FontOptions (30.0f));
-    g.drawFittedText ("Chronos", getLocalBounds(), juce::Justification::top, 1);
+    juce::Colour backgroundColour = juce::Colour(63, 63, 68);
+    g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
+
+    g.setColour (juce::Colour(33, 247, 176));
+    g.setFont(titleFont.withHeight(60.0f));  //.withHeight can change the overall size of the font
+    auto titleArea = juce::Rectangle<int>(55, 7.5, 300, 50);
+    g.drawFittedText ("Chronos", titleArea, juce::Justification::top, 1);
 
 
+    const float cornerSize = 10.0f; // Adjust this for desired corner radius
+    juce::Rectangle<float> area(95.0f, 85.0f, 300.0f, 200.0f); // Or define your own rectangle
 
+    g.setColour(juce::Colour(48,48,54)); // Set your desired color
+    g.fillRoundedRectangle(area, cornerSize);
 
+    //gradient
+    juce::Colour edge1 = juce::Colour::fromRGB(35, 247, 176);  // bright neon
+    juce::Colour edge2 = juce::Colour::fromRGB(63, 63, 68);    // darker edge
+
+    juce::ColourGradient borderGradient(
+        edge1,    
+        area.getRight(), area.getBottom(), // start colour           
+        edge2,                              // end colour
+        area.getX(), area.getY(),          // gradient end point (bottom-right)
+        false                               // not radial
+    );
+
+    borderGradient.addColour(0.5, edge1.brighter()); // mid-shimmer optional
+
+    g.setGradientFill(borderGradient);
+
+    float borderThickness = 3.0f;
+    g.drawRoundedRectangle(area, cornerSize, borderThickness);
+
+    //-------------------------
+    // 
+    // 
+// 
     // Draw button glows **behind the buttons**
     auto drawGlowBehind = [&](juce::TextButton& button, juce::Colour glowColour)
     {
         if (button.getToggleState())
         {
             auto bounds = button.getBounds().toFloat().expanded(4.0f); // expand a little
-            juce::DropShadow shadow(glowColour.withAlpha(0.8f), 25, juce::Point<int>(0, 0));
+            juce::DropShadow shadow(glowColour.withAlpha(1.5f), 25, juce::Point<int>(0, 0));
             shadow.drawForRectangle(g, bounds.getSmallestIntegerContainer());
         }
     };
 
-    drawGlowBehind(bpmButton, juce::Colour(82, 121, 111));
-    drawGlowBehind(hzButton, juce::Colour(82, 121, 111));
-    drawGlowBehind(bpmHzButton, juce::Colour(82, 121, 111));
+    drawGlowBehind(bpmButton, juce::Colour(35, 247, 176));
+    drawGlowBehind(hzButton, juce::Colour(35, 247, 176));
+    drawGlowBehind(bpmHzButton, juce::Colour(35, 247, 176));
 
 
 
 
     // In your component's constructor or a relevant method
-    timeSlider.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
-    timeSlider.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
-    timeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::green); // For rotary sliders
-    timeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
+    timeSlider.setColour(juce::Slider::thumbColourId, juce::Colour(35, 247, 176)); // Changes the color of the slider's thumb
+    //timeSlider.setColour(juce::Slider::trackColourId, juce::Colours::green); // Changes the color of the slider's track
+    timeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(10,10,10)); // For rotary sliders
+    timeSlider.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(87, 87, 96)); // General background
+    
 
     timeLabel.setColour(juce::Label::textColourId, juce::Colours::darkgrey);
-    timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    timeValueLabel.setFont(titleFont.withHeight(30.0f));
+    timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(35, 247, 176));
 
-    mixKnob.setColour(juce::Slider::thumbColourId, juce::Colours::red); // Changes the color of the slider's thumb
-    mixKnob.setColour(juce::Slider::trackColourId, juce::Colours::black); // Changes the color of the slider's track
-    mixKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::green); // For rotary sliders
-    mixKnob.setColour(juce::Slider::backgroundColourId, juce::Colours::lightgrey); // General background
+    mixKnob.setColour(juce::Slider::thumbColourId, juce::Colour(35, 247, 176)); // Thumb
+    mixKnob.setColour(juce::Slider::trackColourId, juce::Colour(196, 253, 234)); // Background track 
+    mixKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(10, 10, 10)); // For rotary sliders
+    mixKnob.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(87, 87, 96));
+    
 
 
     //combobox == dropdown
-    lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black);
-    lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colours::white);
-    lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colours::lime);
+    lfoShapeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(44, 44, 49));
+    lfoShapeSelector.setColour(juce::ComboBox::textColourId, juce::Colour(142, 230, 179));
+    lfoShapeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(35, 247, 176));
+
+
+    lfoShapeLabel.setColour(juce::Label::textColourId, juce::Colour(35,247,176));
+    //lfoShapeLabel.setColour(juce::Label::outlineColourId, juce::Colour(142, 230, 179));
+
+
+   
+    bpmButton.setColour(juce::TextButton::textColourOffId, juce::Colour(35, 247, 176));
+    bpmButton.setColour(juce::TextButton::textColourOnId, juce::Colour(63, 63, 68));
+    bpmButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(35, 247, 176));
+    bpmButton.setColour(juce::TextButton::buttonColourId, juce::Colour(44, 44, 49));
+    //bpmButton.setColour(juce::TextButton::outline, juce::Colour(44, 44, 49));
+
+    hzButton.setColour(juce::TextButton::textColourOffId, juce::Colour(35, 247, 176));
+    hzButton.setColour(juce::TextButton::textColourOnId, juce::Colour(63, 63, 68));
+    hzButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(35, 247, 176));
+    hzButton.setColour(juce::TextButton::buttonColourId, juce::Colour(44, 44, 49));
+
+    bpmHzButton.setColour(juce::TextButton::textColourOffId, juce::Colour(35, 247, 176));
+    bpmHzButton.setColour(juce::TextButton::textColourOnId, juce::Colour(63, 63, 68));
+    bpmHzButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(35, 247, 176));
+    bpmHzButton.setColour(juce::TextButton::buttonColourId, juce::Colour(44, 44, 49));
+
 
 
     if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ)
     {
         if (timeValueLabel.getText().contains("/"))
-            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(238, 99, 82));
         else
-            timeValueLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+            timeValueLabel.setColour(juce::Label::textColourId, juce::Colour(35, 247, 176));
     }
 
 }
@@ -292,33 +381,35 @@ void LFO2AudioProcessorEditor::resized()
 
     midiVolume.setBounds(40, 100, 20, getHeight()-60);
 
-    timeSlider.setBounds(100, 100, 100, 100);
+    timeSlider.setBounds(100, 120, 100, 100);
     auto timeSliderBounds = timeSlider.getBounds(); //getting bounds for labels underneath 
 
     timeValueLabel.setBounds(timeSliderBounds.getX(),timeSliderBounds.getY() - 20,timeSliderBounds.getWidth(),20);
     timeLabel.setBounds(timeSliderBounds.getX(),timeSliderBounds.getBottom(),timeSliderBounds.getWidth(),20);
 
-    mixKnob.setBounds(100, 200, 100, 100);
+    mixKnob.setBounds(100, 400, 100, 100);
 
 
     customKnob.setBounds(250, 200, 128, 128);
 
-    titleGlow.setBounds(0, 10, getWidth(), 60);
 
 
     waveEditor.setBounds(getWidth() / 2 + 20, 100, getWidth() / 2 - 40, getHeight() - 140);
 
     //dropdown
     auto topArea = getLocalBounds().removeFromTop(80);
-    lfoShapeLabel.setBounds(getWidth() / 2 +30, 60, 100, 20);
-    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 80, 100, 25);
+    lfoShapeLabel.setBounds(getWidth() / 2 +10, 40, 300, 30);
+    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 70, 100, 25);
 
 
     //rate to hz 
     int buttonWidth = 50, buttonHeight = 25;
-    bpmButton.setBounds(210, 100, buttonWidth, buttonHeight);
-    hzButton.setBounds(210, 130, buttonWidth, buttonHeight);
-    bpmHzButton.setBounds(210, 160, buttonWidth, buttonHeight);
+    bpmButton.setBounds(210, 110, buttonWidth, buttonHeight);
+    hzButton.setBounds(210, 140, buttonWidth, buttonHeight);
+    bpmHzButton.setBounds(210, 170, buttonWidth, buttonHeight);
+
+
+    logoImage.setBounds(-10, 5, 80, 80);
 
 }
 
@@ -370,7 +461,10 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
         float hz = (float)timeSlider.getValue();
         timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
         audioProcessor.lfo.setSampleRate(audioProcessor.getSampleRate());
-        audioProcessor.lfo.setRate(60.0f * hz, 1.0f); // treat as direct Hz instead 
+        
+        audioProcessor.currentHz = hz;  
+        audioProcessor.currentMode = LFO2AudioProcessor::RateMode::HZ;
+
         waveEditor.setAnimationSpeed(hz);
     } 
     else if (audioProcessor.currentMode == LFO2AudioProcessor::RateMode::BPM_HZ) //bpm/hz mode 
@@ -410,7 +504,8 @@ void LFO2AudioProcessorEditor::sliderValueChanged(juce::Slider* slider) {
            float hzValue = positionToHz(snappedPos, bpm);
 
            //Update LFO and animation speed
-           audioProcessor.lfo.setRate(bpm, (bpm / 60.0f) / hzValue);
+           //audioProcessor.lfo.setRate(bpm, (bpm / 60.0f) / hzValue);
+           audioProcessor.currentHz = pos;
            waveEditor.setAnimationSpeed(hzValue);
 
            // label updating 

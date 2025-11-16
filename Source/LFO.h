@@ -24,6 +24,7 @@ public:
         rateHz = beatsPerSecond / division;
     }
 
+
     void setShape(Shape s) { shape = s; }
     Shape getShape() const { return shape; }
 
@@ -91,6 +92,11 @@ public:
     }
 
     float getRateHz() const { return rateHz; }
+
+    void setRateHz(float hz)
+    {
+        rateHz = hz;
+    }
      
 private:
     juce::CriticalSection bufferLock;

@@ -71,6 +71,8 @@ public:
     enum class RateMode { BPM, HZ, BPM_HZ };
     RateMode currentMode = RateMode::BPM;
 
+    float currentHz = 1.0f;
+
 
     float getLFORateHz() const { return (lfo.getRateHz()*2); }
 

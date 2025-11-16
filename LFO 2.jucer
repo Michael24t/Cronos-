@@ -4,7 +4,16 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginProducesMidiOut,pluginWantsMidiIn"
               pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" displaySplashScreen="1">
   <MAINGROUP id="xgcdZ0" name="LFO 2">
+    <GROUP id="{785B52DF-2774-0FBD-6741-A4D82251DE45}" name="Resources">
+      <FILE id="I5gJlA" name="cronosLogo.png" compile="0" resource="1" file="Pictures/Logo/cronosLogo.png"/>
+      <FILE id="BjZjO2" name="Audiowide-Regular.ttf" compile="0" resource="1"
+            file="../../../Downloads/Audiowide/Audiowide-Regular.ttf"/>
+    </GROUP>
     <GROUP id="{77144C6C-5C5F-6166-D82C-5AC1F77E5A98}" name="Source">
+      <FILE id="qLMcXO" name="CustomLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/CustomLookAndFeel.cpp"/>
+      <FILE id="EJp3cR" name="CustomLookAndFeel.h" compile="0" resource="0"
+            file="Source/CustomLookAndFeel.h"/>
       <FILE id="WCcaxV" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="JHM1XH" name="PluginProcessor.h" compile="0" resource="0"
