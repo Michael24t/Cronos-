@@ -54,6 +54,7 @@ public:
         g.fillRect(getLocalBounds().reduced(6));
 
         auto area = getLocalBounds().reduced(10);
+        //area.translate(0, 200);
         drawGrid(g, area);
 
         // Build and draw path using quadratic segments (control point from tension)
@@ -360,6 +361,9 @@ private:
     float animationPhase = 0.0f;
     float animationSpeed = 1.0f;
 
+    //const float verticalOffset = 0.0f;
+
+
     GlowDot dot;
     std::unique_ptr<GlowEffect> dotGlow;
 
@@ -367,6 +371,7 @@ private:
     juce::Point<float> toPixel(const P& p) const
     {
         auto r = getLocalBounds().toFloat().reduced(10.0f);
+        //r.translate(0, verticalOffset);
         return { r.getX() + p.x * r.getWidth(),
                  r.getY() + (1.0f - p.y) * r.getHeight() };
     }
@@ -374,6 +379,7 @@ private:
     P fromPixel(const juce::Point<float>& pt) const
     {
         auto r = getLocalBounds().toFloat().reduced(10.0f);
+        //r.translate(0, verticalOffset);
         float nx = (pt.x - r.getX()) / r.getWidth();
         float ny = 1.0f - ((pt.y - r.getY()) / r.getHeight());
         return { nx, ny };
@@ -381,6 +387,7 @@ private:
     P fromPixelExact(const juce::Point<float>& pt) const //not sure if both are needed they are similar ^
     {
         auto r = getLocalBounds().toFloat().reduced(10.0f);
+        //r.translate(0, verticalOffset);
         return { (pt.x - r.getX()) / r.getWidth(),
                  1.0f - ((pt.y - r.getY()) / r.getHeight()) };
     }
