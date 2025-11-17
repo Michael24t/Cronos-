@@ -255,13 +255,13 @@ LFO2AudioProcessorEditor::~LFO2AudioProcessorEditor() {
 void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very often so dont put anything crazy in here 
 {
 
-    //rectangle initialization 
     
-  
-
+    
     juce::Colour backgroundColour = juce::Colour(63, 63, 68);
     g.fillAll(backgroundColour); //nice blue 82,255, 184 kinda glowy 
 
+
+    //rectangle initialization 
     g.setColour (juce::Colour(33, 247, 176));
     g.setFont(titleFont.withHeight(60.0f));  //.withHeight can change the overall size of the font
     auto titleArea = juce::Rectangle<int>(55, 7.5, 300, 50);
@@ -271,7 +271,7 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     const float cornerSize = 10.0f; // Adjust this for desired corner radius
     juce::Rectangle<float> area(95.0f, 85.0f, 300.0f, 200.0f); // Or define your own rectangle
 
-    g.setColour(juce::Colour(48,48,54)); // Set your desired color
+    g.setColour(juce::Colour(48,48,54)); 
     g.fillRoundedRectangle(area, cornerSize);
 
     //gradient
@@ -294,9 +294,38 @@ void LFO2AudioProcessorEditor::paint (juce::Graphics& g) //paint is called very 
     g.drawRoundedRectangle(area, cornerSize, borderThickness);
 
     //-------------------------
-    // 
-    // 
-// 
+    //rectangle 2 
+
+    juce::Colour insideColour = juce::Colour(48, 48, 54);   // light-ish grey (same as rect 1)
+    g.setColour(insideColour);
+    
+    const float cornerSize2 = 10.0f;
+    juce::Rectangle<float> area2(95.0f, 350.0f, 300.0f, 200.0f);
+
+    g.fillRoundedRectangle(area2, cornerSize2);
+
+    juce::Colour edge1b = juce::Colour::fromRGB(35, 247, 176);
+    juce::Colour edge2b = juce::Colour::fromRGB(63, 63, 68);
+
+    juce::ColourGradient borderGradient2(
+        edge1b,
+        area2.getRight(), area2.getBottom(),
+        edge2b,
+        area2.getX(), area2.getY(),
+        false
+    );
+
+    borderGradient2.addColour(0.5, edge1b.brighter());
+    g.setGradientFill(borderGradient2);
+
+    float borderThickness2 = 3.0f;
+    g.drawRoundedRectangle(area2, cornerSize2, borderThickness2);
+
+    //-------------------------
+
+
+
+
     // Draw button glows **behind the buttons**
     auto drawGlowBehind = [&](juce::TextButton& button, juce::Colour glowColour)
     {
@@ -387,19 +416,19 @@ void LFO2AudioProcessorEditor::resized()
     timeValueLabel.setBounds(timeSliderBounds.getX(),timeSliderBounds.getY() - 20,timeSliderBounds.getWidth(),20);
     timeLabel.setBounds(timeSliderBounds.getX(),timeSliderBounds.getBottom(),timeSliderBounds.getWidth(),20);
 
-    mixKnob.setBounds(100, 400, 100, 100);
+    mixKnob.setBounds(getWidth() -100, 10, 100, 100);
 
 
     customKnob.setBounds(250, 200, 128, 128);
 
 
 
-    waveEditor.setBounds(getWidth() / 2 + 20, 100, getWidth() / 2 - 40, getHeight() - 140);
+    waveEditor.setBounds(getWidth() / 2 + 20, 125, getWidth() / 2 - 40, getHeight() - 140);
 
     //dropdown
     auto topArea = getLocalBounds().removeFromTop(80);
-    lfoShapeLabel.setBounds(getWidth() / 2 +10, 40, 300, 30);
-    lfoShapeSelector.setBounds(getWidth() / 2 + 30, 70, 100, 25);
+    lfoShapeLabel.setBounds(getWidth() / 2 +10, 60, 300, 30);
+    lfoShapeSelector.setBounds(getWidth() / 2 + 15, 90, 100, 25);
 
 
     //rate to hz 
