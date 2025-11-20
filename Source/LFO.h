@@ -22,6 +22,7 @@ public:
         bpm = bpm_;
         float beatsPerSecond = bpm / 60.0f;
         rateHz = beatsPerSecond / division;
+        updateSmoothing();
     }
 
 
@@ -88,6 +89,9 @@ public:
         // advance phase
         phase += rateHz / sampleRate;
         if (phase >= 1.0) phase -= 1.0;
+
+        smoothedOut = smoothedOut * smoothingCoeff + out * (1.0f - smoothingCoeff);
+
         return out; 
     }
 
@@ -96,6 +100,14 @@ public:
     void setRateHz(float hz)
     {
         rateHz = hz;
+        updateSmoothing();
+    }
+
+    void updateSmoothing() {
+        const float smoothingTimeMs = 5.0f; // tweakable (2–10 ms works well)
+        float tau = smoothingTimeMs * 0.001f;
+
+        smoothingCoeff = std::exp(-1.0f / (sampleRate * tau));
     }
      
 private:
@@ -109,4 +121,8 @@ private:
     float bpm = 122.0f;
     double phase = 0.0;
     Shape shape = Shape::Saw;
+
+    //smoothing
+    float smoothedOut = 0.0f;
+    float smoothingCoeff = 0.0f;
 };
