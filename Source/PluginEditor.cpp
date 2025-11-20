@@ -121,7 +121,7 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
             float hz = (audioProcessor.bpm / 60.0f) / audioProcessor.division;
 
             // Set up slider
-            timeSlider.setRange(0.1, 10.0, 0.01);
+            timeSlider.setRange(0.1, 15.0, 0.01);
             timeSlider.setValue(hz, juce::dontSendNotification);
             timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);
 
@@ -135,12 +135,16 @@ LFO2AudioProcessorEditor::LFO2AudioProcessorEditor (LFO2AudioProcessor& p)
     bpmHzButton.onClick = [this]() {
         if (bpmHzButton.getToggleState())
         {
+            float hz = (audioProcessor.bpm / 60.0f) / audioProcessor.division;
+
             bpmButton.setToggleState(false, juce::dontSendNotification);
             hzButton.setToggleState(false, juce::dontSendNotification);
             audioProcessor.currentMode = LFO2AudioProcessor::RateMode::BPM_HZ;
 
-            timeSlider.setRange(0.0, 1.0, 0.0001);
-            timeSlider.setValue(hzToPosition(audioProcessor.lfo.getRateHz(), audioProcessor.bpm),juce::dontSendNotification);
+            timeSlider.setRange(0.1, 15.0, 0.01);
+            timeSlider.setValue(audioProcessor.lfo.getRateHz(), juce::dontSendNotification);
+            timeValueLabel.setText(juce::String(hz, 2) + " Hz", juce::dontSendNotification);  //TODO NOT WORKING 
+
         }
     };
 
