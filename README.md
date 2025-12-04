@@ -1,5 +1,5 @@
 
-![Logo](https://github.com/Michael24t/Cronos-/blob/main/Screenshot%202025-12-04%20144847.png)
+![Logo](https://github.com/Michael24t/Cronos-/blob/main/Screenshot%202025-12-04%20151446.png)
 
 
 # Chronos
