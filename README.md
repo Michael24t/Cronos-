@@ -2,8 +2,6 @@
 ![Logo](https://github.com/Michael24t/Cronos-/blob/main/Screenshot%202025-12-04%20151446%20(1).png)
 
 
-# Chronos
-
 Chronos is a volume-LFO tool that seamlessly blends BPM-synchronized timing with free-running Hz mode to let producers perform in-time stutter manipulation. Using the bpm/hz mode artists can speed up or slow down the stutter rate in Hz and then snap perfectly back to the grid-locked BPM mode without going off beat. The goal is to give producers control over stutter timing while always maintaining tempo allignment. 
 
 ## Screenshots
