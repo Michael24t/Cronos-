@@ -8,7 +8,7 @@ Chronos is a volume-LFO tool that seamlessly blends BPM-synchronized timing with
 
 ## Screenshots
 
-![App Screenshot]([https://via.placeholder.com/468x300?text=App+Screenshot+Here](https://github.com/Michael24t/Cronos-/blob/main/Screenshot%202025-12-04%20144831.png))
+![App Screenshot](https://github.com/Michael24t/Cronos-/blob/main/Screenshot%202025-12-04%20144831.png)
 
 
 ## Features
